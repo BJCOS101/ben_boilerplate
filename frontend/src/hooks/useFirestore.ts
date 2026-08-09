@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   onSnapshot,
   query,
+  queryEqual,
   type CollectionReference,
   type DocumentData,
   type Query,
@@ -30,14 +31,20 @@ export function useCollection<T extends DocumentData>(
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  useEffect(() => {
-    const q: Query<T> =
-      queryConstraints.length > 0
-        ? query(collectionRef, ...queryConstraints)
-        : query(collectionRef)
+  // `where(...)` etc. return a new object every render, so we can't put the raw
+  // constraints in the effect's dependency array without resubscribing (and
+  // re-triggering this same render) on every single snapshot. Keep the same
+  // Query instance across renders unless it's actually semantically different.
+  const q: Query<T> =
+    queryConstraints.length > 0 ? query(collectionRef, ...queryConstraints) : query(collectionRef)
+  const [stableQuery, setStableQuery] = useState(q)
+  if (!queryEqual(stableQuery, q)) {
+    setStableQuery(q)
+  }
 
+  useEffect(() => {
     const unsubscribe = onSnapshot(
-      q,
+      stableQuery,
       (snapshot) => {
         setData(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as T[])
         setLoading(false)
@@ -49,8 +56,7 @@ export function useCollection<T extends DocumentData>(
     )
 
     return () => unsubscribe()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [collectionRef])
+  }, [stableQuery])
 
   return { data, loading, error }
 }
