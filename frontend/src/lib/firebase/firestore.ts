@@ -1,6 +1,6 @@
 import { collection, doc, type CollectionReference, type DocumentData } from 'firebase/firestore'
 import { getClientDb } from './client'
-import type { UserProfile } from '@/types/firestore'
+import type { Note, UserProfile } from '@/types/firestore'
 
 /**
  * Creates a typed Firestore collection reference.
@@ -15,6 +15,10 @@ function typedCollection<T extends DocumentData>(path: string): CollectionRefere
 //   - src/types/firestore.ts
 //   - firebase/firestore.rules
 //   - docs/FIRESTORE-SCHEMA.md
+
+export function getNotesCollection() {
+  return typedCollection<Note>('notes')
+}
 
 export function getUsersCollection() {
   return typedCollection<UserProfile>('users')

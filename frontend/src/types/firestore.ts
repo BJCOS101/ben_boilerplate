@@ -11,6 +11,16 @@ import type { Timestamp } from 'firebase/firestore'
  * When adding a new collection, use the /firebase-collection skill.
  */
 
+export interface Note {
+  id: string
+  uid: string            // owner's user id — used by security rules
+  title: string
+  body: string
+  createdAt: Timestamp
+  updatedAt: Timestamp
+  _schemaVersion: 1      // every document carries this — see /evolve-schema
+}
+
 export interface UserProfile {
   uid: string
   email: string
